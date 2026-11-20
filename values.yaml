@@ -1,0 +1,39 @@
+image:
+  repository: ghcr.io/tautulli/tautulli
+  # Empty uses the chart's appVersion.
+  tag: ""
+
+# The user and group Tautulli runs as; /config's volume is given to the group.
+user: 1000
+group: 1000
+
+timezone: UTC
+
+# Tautulli's config.ini settings, each passed as TAUTULLI_<KEY>.
+# A setting given here overrides config.ini and can't be changed in the web UI.
+settings:
+  # Tautulli sends usage analytics to Google unless this is 0.
+  SYSTEM_ANALYTICS: 0
+
+# The name of an existing Secret whose keys are setting names, such as PMS_TOKEN or HTTP_PASSWORD.
+# Each key is passed as TAUTULLI_<KEY>, like settings.
+settingsSecret: ""
+
+resources:
+  requests:
+    cpu: 100m
+    memory: 256Mi
+
+# /config: config.ini, Tautulli's SQLite database, its backups, cache and logs.
+# An empty storageClassName uses the cluster's default class.
+persistence:
+  size: 2Gi
+  storageClassName: ""
+
+affinity: {}
+
+# A Gateway API HTTPRoute to the web UI.
+httpRoute:
+  enabled: false
+  parentRefs: []
+  hostnames: []
