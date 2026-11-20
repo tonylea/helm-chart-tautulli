@@ -18,7 +18,6 @@ Tautulli reads Plex only through its API, so it mounts no media.
 
 | Value | Default |
 | --- | --- |
-| `image.repository` | `ghcr.io/tautulli/tautulli` |
 | `image.tag` | the chart's `appVersion` |
 | `user` | `1000` |
 | `group` | `1000` |
@@ -35,23 +34,25 @@ Tautulli reads Plex only through its API, so it mounts no media.
 
 ### Settings
 
-Tautulli reads any of its `config.ini` settings from an environment variable named `TAUTULLI_` and the setting's name, upper-cased.
-A setting given that way overrides `config.ini`, and the web UI can't change it.
+`settings` sets Tautulli's settings, and `settingsSecret` names a Secret whose keys are settings, for the secret ones.
+Settings given either way can't be changed in the web UI.
 
-`settings` passes plain settings that way, and `settingsSecret` names a Secret whose keys are setting names, for the secret ones.
-For example, `PMS_TOKEN` in the Secret becomes `TAUTULLI_PMS_TOKEN`.
-
-The chart sets `SYSTEM_ANALYTICS` to `0`, since Tautulli otherwise sends usage analytics to Google.
-Set it to `1` to send them.
-
-Notification agents, newsletters and per-user and per-library settings are kept in Tautulli's database, not `config.ini`, so they're set in the web UI or through Tautulli's API.
+| Setting | In | Purpose |
+| --- | --- | --- |
+| `FIRST_RUN_COMPLETE` | `settings` | `1` skips the setup wizard. |
+| `PMS_URL` | `settings` | The Plex server's URL. |
+| `PMS_URL_MANUAL` | `settings` | `1` stops Tautulli replacing `PMS_URL` with one from plex.tv. |
+| `PMS_IP`, `PMS_PORT` | `settings` | The Plex server's host and port. |
+| `PMS_IDENTIFIER` | `settings` | The Plex server's machine identifier, from its `/identity`. |
+| `PMS_TOKEN`, `PMS_CLIENT_ID` | Secret | A Plex token issued to Tautulli, and the client ID it was issued to; never the server's own `PlexOnlineToken`. |
+| `HTTP_USERNAME`, `HTTP_PASSWORD` | Secret | The web UI's login. |
+| `API_KEY` | Secret | The key for Tautulli's API. |
+| `SYSTEM_ANALYTICS` | `settings` | Defaults to `0`, so no usage analytics are sent to Google. |
 
 ### User and group
 
-The image's entrypoint starts as root, remaps its `tautulli` user to `PUID` and `PGID`, takes ownership of `/config`, and then drops to that user.
-The chart skips it and runs Tautulli directly as user and group `1000`, the image's own `tautulli` user, so the pod never runs as root.
-The pod's `fsGroup` is the same group, so Tautulli can write to `/config`'s volume.
-`PUID` and `PGID` do nothing here; set `user` and `group` instead.
+Tautulli runs as `user` and `group`, never as root, and `/config`'s volume is given to the group.
+The image's `PUID` and `PGID` aren't used.
 
 ## Requirements
 
@@ -69,8 +70,12 @@ helm install tautulli tautulli/tautulli --values my-values.yaml
 timezone: Europe/London
 settings:
   FIRST_RUN_COMPLETE: 1
+  PMS_URL: http://plex.media.svc.cluster.local:32400
+  PMS_URL_MANUAL: 1
   PMS_IP: plex.media.svc.cluster.local
   PMS_PORT: 32400
+  PMS_IDENTIFIER: 0123456789abcdef0123456789abcdef01234567
+# Keys: PMS_TOKEN, PMS_CLIENT_ID, HTTP_USERNAME, HTTP_PASSWORD and API_KEY.
 settingsSecret: tautulli-settings
 ```
 

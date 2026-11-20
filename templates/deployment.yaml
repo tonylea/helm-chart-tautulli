@@ -24,7 +24,7 @@ spec:
         fsGroup: {{ .Values.group }}
       containers:
         - name: tautulli
-          image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
+          image: "ghcr.io/tautulli/tautulli:{{ .Values.image.tag | default .Chart.AppVersion }}"
           # Skips the image's start.sh, which needs root to remap its user and chown /config.
           command: [python, Tautulli.py, --datadir, /config]
           env:
