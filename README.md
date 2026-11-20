@@ -18,7 +18,6 @@ Tautulli reads Plex only through its API, so it mounts no media.
 
 | Value | Default |
 | --- | --- |
-| `image.repository` | `ghcr.io/tautulli/tautulli` |
 | `image.tag` | the chart's `appVersion` |
 | `user` | `1000` |
 | `group` | `1000` |
