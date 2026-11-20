@@ -1,0 +1,151 @@
+suite: Deployment
+release:
+  name: tautulli
+templates:
+  - templates/deployment.yaml
+tests:
+  - it: runs one replica of the chart's appVersion, stopping the old pod first
+    asserts:
+      - equal:
+          path: spec.replicas
+          value: 1
+      - equal:
+          path: spec.strategy.type
+          value: Recreate
+      - equal:
+          path: spec.template.spec.containers[0].image
+          value: ghcr.io/tautulli/tautulli:v2.19.1
+
+  - it: uses the image tag when one is set
+    set:
+      image.tag: v2.18.2
+    asserts:
+      - equal:
+          path: spec.template.spec.containers[0].image
+          value: ghcr.io/tautulli/tautulli:v2.18.2
+
+  - it: runs Tautulli directly as user and group 1000, with /config's volume given to the group
+    asserts:
+      - equal:
+          path: spec.template.spec.securityContext
+          value:
+            runAsUser: 1000
+            runAsGroup: 1000
+            fsGroup: 1000
+      - equal:
+          path: spec.template.spec.containers[0].command
+          value: [python, Tautulli.py, --datadir, /config]
+
+  - it: runs as another user and group when set
+    set:
+      user: 1026
+      group: 100
+    asserts:
+      - equal:
+          path: spec.template.spec.securityContext
+          value:
+            runAsUser: 1026
+            runAsGroup: 100
+            fsGroup: 100
+
+  - it: sets the timezone and turns analytics off by default
+    asserts:
+      - equal:
+          path: spec.template.spec.containers[0].env
+          value:
+            - name: TZ
+              value: UTC
+            - name: TAUTULLI_SYSTEM_ANALYTICS
+              value: "0"
+      - notExists:
+          path: spec.template.spec.containers[0].envFrom
+
+  - it: passes each setting as TAUTULLI_<KEY>, upper-cased
+    set:
+      timezone: Europe/London
+      settings:
+        first_run_complete: 1
+        PMS_IP: plex.media.svc
+    asserts:
+      - equal:
+          path: spec.template.spec.containers[0].env
+          value:
+            - name: TZ
+              value: Europe/London
+            - name: TAUTULLI_PMS_IP
+              value: plex.media.svc
+            - name: TAUTULLI_SYSTEM_ANALYTICS
+              value: "0"
+            - name: TAUTULLI_FIRST_RUN_COMPLETE
+              value: "1"
+
+  - it: passes the settings Secret's keys with the TAUTULLI_ prefix
+    set:
+      settingsSecret: tautulli-settings
+    asserts:
+      - equal:
+          path: spec.template.spec.containers[0].envFrom
+          value:
+            - prefix: TAUTULLI_
+              secretRef:
+                name: tautulli-settings
+
+  - it: probes /status, giving start-up 5 minutes
+    asserts:
+      - equal:
+          path: spec.template.spec.containers[0].startupProbe
+          value:
+            httpGet:
+              path: /status
+              port: http
+            periodSeconds: 10
+            failureThreshold: 30
+      - equal:
+          path: spec.template.spec.containers[0].livenessProbe.httpGet.path
+          value: /status
+      - equal:
+          path: spec.template.spec.containers[0].readinessProbe.httpGet.path
+          value: /status
+
+  - it: requests CPU and memory, with no limits
+    asserts:
+      - equal:
+          path: spec.template.spec.containers[0].resources
+          value:
+            requests:
+              cpu: 100m
+              memory: 256Mi
+
+  - it: mounts the config claim at /config
+    asserts:
+      - equal:
+          path: spec.template.spec.containers[0].volumeMounts
+          value:
+            - name: config
+              mountPath: /config
+      - equal:
+          path: spec.template.spec.volumes
+          value:
+            - name: config
+              persistentVolumeClaim:
+                claimName: tautulli-config
+
+  - it: sets affinity when given
+    set:
+      affinity:
+        nodeAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            nodeSelectorTerms:
+              - matchExpressions:
+                  - key: example.com/zone
+                    operator: In
+                    values: ["a"]
+    asserts:
+      - equal:
+          path: spec.template.spec.affinity.nodeAffinity.requiredDuringSchedulingIgnoredDuringExecution.nodeSelectorTerms[0].matchExpressions[0].key
+          value: example.com/zone
+
+  - it: sets no affinity by default
+    asserts:
+      - notExists:
+          path: spec.template.spec.affinity

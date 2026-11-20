@@ -1,0 +1,21 @@
+suite: Service
+release:
+  name: tautulli
+templates:
+  - templates/service.yaml
+tests:
+  - it: serves Tautulli's port to the pod's http port
+    asserts:
+      - equal:
+          path: spec.ports
+          value:
+            - name: http
+              port: 8181
+              targetPort: http
+      - equal:
+          path: spec.selector
+          value:
+            app.kubernetes.io/name: tautulli
+            app.kubernetes.io/instance: tautulli
+      - notExists:
+          path: spec.type

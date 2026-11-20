@@ -1,0 +1,31 @@
+suite: PersistentVolumeClaim
+release:
+  name: tautulli
+templates:
+  - templates/persistentvolumeclaim.yaml
+tests:
+  - it: claims 2Gi ReadWriteOnce for /config from the default class
+    asserts:
+      - equal:
+          path: metadata.name
+          value: tautulli-config
+      - equal:
+          path: spec.accessModes
+          value: [ReadWriteOnce]
+      - equal:
+          path: spec.resources.requests.storage
+          value: 2Gi
+      - notExists:
+          path: spec.storageClassName
+
+  - it: uses the size and storage class when set
+    set:
+      persistence.size: 5Gi
+      persistence.storageClassName: longhorn
+    asserts:
+      - equal:
+          path: spec.resources.requests.storage
+          value: 5Gi
+      - equal:
+          path: spec.storageClassName
+          value: longhorn
