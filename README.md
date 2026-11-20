@@ -34,43 +34,25 @@ Tautulli reads Plex only through its API, so it mounts no media.
 
 ### Settings
 
-Tautulli reads any of its `config.ini` settings from an environment variable named `TAUTULLI_` and the setting's name, upper-cased.
-A setting given that way overrides `config.ini`, and the web UI can't change it.
+`settings` sets Tautulli's settings, and `settingsSecret` names a Secret whose keys are settings, for the secret ones.
+Settings given either way can't be changed in the web UI.
 
-`settings` passes plain settings that way, and `settingsSecret` names a Secret whose keys are setting names, for the secret ones.
-For example, `PMS_TOKEN` in the Secret becomes `TAUTULLI_PMS_TOKEN`.
-
-The chart sets `SYSTEM_ANALYTICS` to `0`, since Tautulli otherwise sends usage analytics to Google.
-Set it to `1` to send them.
-
-Notification agents, newsletters and per-user and per-library settings are kept in Tautulli's database, not `config.ini`, so they're set in the web UI or through Tautulli's API.
-
-### Connecting to Plex
-
-Tautulli connects to Plex Media Server only once its setup wizard is complete.
-`FIRST_RUN_COMPLETE` set to `1` skips the wizard, and these settings take its place:
-
-| Setting | Purpose |
-| --- | --- |
-| `PMS_URL` | The URL Tautulli connects to. When it's empty, Tautulli builds a plain `http` URL from `PMS_IP` and `PMS_PORT`. |
-| `PMS_URL_MANUAL` | `1` keeps `PMS_URL` as given. Otherwise Tautulli replaces it with one from plex.tv every 12 hours. |
-| `PMS_IP`, `PMS_PORT` | Needed even with `PMS_URL` set: start-up refreshes the server's details and libraries only when they're set. |
-| `PMS_IDENTIFIER` | The server's machine identifier, from `http://<server>:32400/identity`. plex.tv lookups and the user list depend on it. |
-| `PMS_TOKEN`, `PMS_CLIENT_ID` | Tautulli's own Plex token, and the client ID it was issued to. |
-
-The token must be one issued to Tautulli, never the server's own `PlexOnlineToken` from its `Preferences.xml`.
-Tautulli's requests to plex.tv name Tautulli as the product, so with the server's token plex.tv records the server as running Tautulli's version.
-Tautulli logs an error when it sees this.
-
-Tautulli gets its own token from **Settings → Plex Media Server → Fetch New Token**, which saves the token with its client ID.
-A `PMS_TOKEN` set by environment variable overrides what that saves.
+| Setting | In | Purpose |
+| --- | --- | --- |
+| `FIRST_RUN_COMPLETE` | `settings` | `1` skips the setup wizard. |
+| `PMS_URL` | `settings` | The Plex server's URL. |
+| `PMS_URL_MANUAL` | `settings` | `1` stops Tautulli replacing `PMS_URL` with one from plex.tv. |
+| `PMS_IP`, `PMS_PORT` | `settings` | The Plex server's host and port. |
+| `PMS_IDENTIFIER` | `settings` | The Plex server's machine identifier, from its `/identity`. |
+| `PMS_TOKEN`, `PMS_CLIENT_ID` | Secret | A Plex token issued to Tautulli, and the client ID it was issued to; never the server's own `PlexOnlineToken`. |
+| `HTTP_USERNAME`, `HTTP_PASSWORD` | Secret | The web UI's login. |
+| `API_KEY` | Secret | The key for Tautulli's API. |
+| `SYSTEM_ANALYTICS` | `settings` | Defaults to `0`, so no usage analytics are sent to Google. |
 
 ### User and group
 
-The image's entrypoint starts as root, remaps its `tautulli` user to `PUID` and `PGID`, takes ownership of `/config`, and then drops to that user.
-The chart skips it and runs Tautulli directly as user and group `1000`, the image's own `tautulli` user, so the pod never runs as root.
-The pod's `fsGroup` is the same group, so Tautulli can write to `/config`'s volume.
-`PUID` and `PGID` do nothing here; set `user` and `group` instead.
+Tautulli runs as `user` and `group`, never as root, and `/config`'s volume is given to the group.
+The image's `PUID` and `PGID` aren't used.
 
 ## Requirements
 
