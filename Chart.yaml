@@ -1,0 +1,9 @@
+apiVersion: v2
+name: tautulli
+description: Deploys Tautulli, a monitoring and statistics tool for Plex Media Server
+type: application
+version: 1.0.0
+appVersion: "v2.19.1"
+home: https://github.com/tonylea/helm-chart-tautulli
+sources:
+  - https://github.com/Tautulli/Tautulli

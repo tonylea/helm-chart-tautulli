@@ -1,0 +1,74 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ .Release.Name }}
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "tautulli.labels" . | nindent 4 }}
+spec:
+  # /config is ReadWriteOnce and holds a SQLite database, so the old pod stops before the new one starts.
+  replicas: 1
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      {{- include "tautulli.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      labels:
+        {{- include "tautulli.labels" . | nindent 8 }}
+    spec:
+      securityContext:
+        runAsUser: {{ .Values.user }}
+        runAsGroup: {{ .Values.group }}
+        fsGroup: {{ .Values.group }}
+      containers:
+        - name: tautulli
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
+          # Skips the image's start.sh, which needs root to remap its user and chown /config.
+          command: [python, Tautulli.py, --datadir, /config]
+          env:
+            - name: TZ
+              value: {{ .Values.timezone | quote }}
+            {{- range $key, $value := .Values.settings }}
+            - name: TAUTULLI_{{ upper $key }}
+              value: {{ $value | quote }}
+            {{- end }}
+          {{- with .Values.settingsSecret }}
+          envFrom:
+            - prefix: TAUTULLI_
+              secretRef:
+                name: {{ . }}
+          {{- end }}
+          ports:
+            - name: http
+              containerPort: 8181
+          # Start-up upgrades the database before Tautulli listens, so it gets 5 minutes.
+          startupProbe:
+            httpGet:
+              path: /status
+              port: http
+            periodSeconds: 10
+            failureThreshold: 30
+          livenessProbe:
+            httpGet:
+              path: /status
+              port: http
+            periodSeconds: 30
+          readinessProbe:
+            httpGet:
+              path: /status
+              port: http
+          resources:
+            {{- toYaml .Values.resources | nindent 12 }}
+          volumeMounts:
+            - name: config
+              mountPath: /config
+      {{- with .Values.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      volumes:
+        - name: config
+          persistentVolumeClaim:
+            claimName: {{ .Release.Name }}-config
