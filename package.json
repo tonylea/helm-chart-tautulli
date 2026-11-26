@@ -1,6 +1,6 @@
 {
   "name": "helm-chart-tautulli",
-  "version": "2.0.0",
+  "version": "2.0.1",
   "description": "Deploys Tautulli, a monitoring and statistics tool for Plex Media Server",
   "private": true,
   "repository": {

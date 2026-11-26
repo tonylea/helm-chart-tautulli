@@ -2,6 +2,16 @@
 
 All notable changes to this project will be documented in this file. See [commit-and-tag-version](https://github.com/absolute-version/commit-and-tag-version) for commit guidelines.
 
+## [2.0.1](https://github.com/tonylea/helm-chart-tautulli/compare/v2.0.0...v2.0.1) (2026-11-26)
+
+### Bug Fixes
+
+* leave resource requests to whoever deploys the chart ([a7ecabc](https://github.com/tonylea/helm-chart-tautulli/commit/a7ecabcda0f5aa171449dfcc65647d0e524cea6f))
+
+### Documentation
+
+* recommend requests from Tautulli's measured typical use ([56fe9ae](https://github.com/tonylea/helm-chart-tautulli/commit/56fe9ae2d882ade340f6cd45f266bdbfb1ffdacb))
+
 ## [2.0.0](https://github.com/tonylea/helm-chart-tautulli/compare/v1.0.0...v2.0.0) (2026-11-20)
 
 ### ⚠ BREAKING CHANGES
