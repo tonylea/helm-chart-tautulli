@@ -18,10 +18,7 @@ settings:
 # Each key is passed as TAUTULLI_<KEY>, like settings.
 settingsSecret: ""
 
-resources:
-  requests:
-    cpu: 100m
-    memory: 256Mi
+resources: {}
 
 # /config: config.ini, Tautulli's SQLite database, its backups, cache and logs.
 # An empty storageClassName uses the cluster's default class.

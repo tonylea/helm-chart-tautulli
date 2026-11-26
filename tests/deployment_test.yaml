@@ -107,14 +107,23 @@ tests:
           path: spec.template.spec.containers[0].readinessProbe.httpGet.path
           value: /status
 
-  - it: requests CPU and memory, with no limits
+  - it: leaves resources to whoever deploys it
+    asserts:
+      - equal:
+          path: spec.template.spec.containers[0].resources
+          value: {}
+
+  - it: uses the resources when set
+    set:
+      resources.requests.cpu: 50m
+      resources.requests.memory: 128Mi
     asserts:
       - equal:
           path: spec.template.spec.containers[0].resources
           value:
             requests:
-              cpu: 100m
-              memory: 256Mi
+              cpu: 50m
+              memory: 128Mi
 
   - it: mounts the config claim at /config
     asserts:
