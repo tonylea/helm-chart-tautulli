@@ -24,7 +24,7 @@ Tautulli reads Plex only through its API, so it mounts no media.
 | `timezone` | `UTC` |
 | `settings` | `SYSTEM_ANALYTICS: 0` |
 | `settingsSecret` | none |
-| `resources` | requests `cpu: 100m`, `memory: 256Mi`; no limits |
+| `resources` | none |
 | `persistence.size` | `2Gi` |
 | `persistence.storageClassName` | the cluster's default class |
 | `affinity` | none |
